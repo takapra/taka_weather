@@ -38,7 +38,7 @@
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
             border: 1px solid rgba(255, 255, 255, 0.8);
-            border-radius: 1.5rem;
+            border-radius: 1rem;
             box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
             color: #1e293b;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -46,16 +46,16 @@
 
         .golden-row { 
             background: linear-gradient(90deg, rgba(251, 191, 36, 0.15) 0%, rgba(251, 191, 36, 0.05) 100%) !important;
-            border-left: 5px solid #fbbf24 !important;
+            border-left: 4px solid #fbbf24 !important;
         }
 
         .live-indicator {
-            width: 8px;
-            height: 8px;
+            width: 6px;
+            height: 6px;
             background: #10b981;
             border-radius: 50%;
             display: inline-block;
-            box-shadow: 0 0 8px #10b981;
+            box-shadow: 0 0 6px #10b981;
             animation: pulse 2s infinite;
         }
 
@@ -79,37 +79,48 @@
             transition: opacity 0.5s ease;
         }
 
+        /* メジナのイラストコンテナ */
         .hero-visual-container {
             position: absolute;
-            right: -60px;
+            right: -40px;
             top: -40px;
-            width: 650px;
-            height: 550px;
+            width: 480px;
+            height: 400px;
             pointer-events: none;
             z-index: 0;
         }
 
         .fish-mask {
-            mask-image: radial-gradient(circle at 55% 50%, black 25%, transparent 75%);
-            -webkit-mask-image: radial-gradient(circle at 55% 50%, black 25%, transparent 75%);
-            opacity: 0.6;
+            mask-image: radial-gradient(circle at 55% 50%, black 20%, transparent 70%);
+            -webkit-mask-image: radial-gradient(circle at 55% 50%, black 20%, transparent 70%);
+            opacity: 0.45;
         }
 
         .weekly-card-active {
             background: white !important;
             border-color: #0ea5e9 !important;
-            box-shadow: 0 15px 35px -10px rgba(14, 165, 233, 0.4);
-            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 10px 25px -8px rgba(14, 165, 233, 0.3);
+            transform: translateY(-2px);
             z-index: 10;
         }
 
         .tide-badge {
-            font-size: 9px;
-            font-weight: 900;
-            padding: 2px 6px;
-            border-radius: 6px;
-            letter-spacing: 0.05em;
+            font-size: 8px;
+            font-weight: 800;
+            padding: 1px 4px;
+            border-radius: 4px;
         }
+        
+        /* テーブルの列幅を極限までコンパクトに */
+        .col-time { width: 55px; }
+        .col-weather { width: 40px; }
+        .col-temp { width: 45px; }
+        .col-rain { width: 40px; }
+        .col-wind { width: 90px; }
+        .col-wave { width: 60px; }
+        .col-actual { width: 65px; }
+        .col-water { width: 55px; }
+        .col-tide { width: 55px; }
     </style>
 </head>
 <body class="pb-32">
@@ -131,16 +142,16 @@
         <div class="text-sky-600 font-black tracking-widest text-[10px]">データ取得中...</div>
     </div>
 
-    <header class="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-sky-200 px-4 py-4">
-        <div class="max-w-7xl mx-auto flex items-center justify-between relative z-10">
+    <header class="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-sky-200 px-4 py-3">
+        <div class="max-w-7xl ml-0 flex items-center justify-between relative z-10">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 bg-sky-600 rounded-2xl flex items-center justify-center shadow-lg shadow-sky-200">
-                    <i data-lucide="cloud-sun" class="w-6 h-6 text-white"></i>
+                <div class="w-8 h-8 bg-sky-600 rounded-xl flex items-center justify-center shadow-lg shadow-sky-200">
+                    <i data-lucide="cloud-sun" class="w-5 h-5 text-white"></i>
                 </div>
-                <h1 class="text-xl font-black text-slate-900 tracking-tighter">Sea<span class="text-sky-500">Weather</span></h1>
+                <h1 class="text-lg font-black text-slate-900 tracking-tighter">Sea<span class="text-sky-500">Weather</span></h1>
             </div>
             
-            <select id="area-select" onchange="updateData()" class="bg-white text-slate-700 text-[12px] font-bold rounded-xl px-4 py-2.5 border border-sky-100 outline-none appearance-none cursor-pointer shadow-sm">
+            <select id="area-select" onchange="updateData()" class="bg-white text-slate-700 text-[11px] font-bold rounded-lg px-3 py-2 border border-sky-100 outline-none appearance-none cursor-pointer shadow-sm">
                 <option value="shiosezaki">秋田 潮瀬崎</option>
                 <option value="kamo">秋田 加茂地区</option>
                 <option value="nyudozaki">秋田 入道崎</option>
@@ -149,17 +160,17 @@
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto p-4 space-y-6">
+    <main class="p-4 space-y-6">
         
-        <!-- 週間予報セクション -->
-        <section class="relative">
-            <!-- イラストメジナ (SVG) - ビジュアルとして維持 -->
+        <!-- 週間予報セクション (左寄せ + イラスト) -->
+        <section class="relative max-w-full">
+            <!-- メジナのイラスト -->
             <div class="hero-visual-container fish-mask">
                 <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
                     <defs>
                         <radialGradient id="fishGrad" cx="40%" cy="40%" r="70%">
-                            <stop offset="0%" style="stop-color:#64748b" />
-                            <stop offset="60%" style="stop-color:#334155" />
+                            <stop offset="0%" style="stop-color:#475569" />
+                            <stop offset="60%" style="stop-color:#1e293b" />
                             <stop offset="100%" style="stop-color:#0f172a" />
                         </radialGradient>
                         <radialGradient id="eyeBlueGrad" cx="50%" cy="50%" r="50%">
@@ -168,129 +179,121 @@
                             <stop offset="100%" style="stop-color:#000" />
                         </radialGradient>
                     </defs>
-                    <path d="M40,120 C40,40 260,-20 400,100 L400,350 C260,450 40,400 40,320 Z" fill="url(#fishGrad)" />
-                    <g transform="translate(150, 180)">
-                        <circle r="42" fill="rgba(255,255,255,0.2)" />
-                        <circle r="34" fill="url(#eyeBlueGrad)" />
-                        <circle r="16" fill="#000" />
-                        <circle cx="-10" cy="-10" r="6" fill="#fff" opacity="0.8" />
+                    <!-- メジナの体 -->
+                    <path d="M40,150 C40,70 260,10 400,130 L400,320 C260,420 40,370 40,300 Z" fill="url(#fishGrad)" />
+                    <!-- 目の輝き -->
+                    <g transform="translate(140, 190)">
+                        <circle r="38" fill="rgba(255,255,255,0.15)" />
+                        <circle r="30" fill="url(#eyeBlueGrad)" />
+                        <circle r="14" fill="#000" />
+                        <circle cx="-8" cy="-8" r="5" fill="#fff" opacity="0.8" />
                     </g>
                 </svg>
             </div>
 
-            <div class="flex items-center justify-between mb-4 px-1 relative z-10">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="calendar" class="w-4 h-4 text-sky-600"></i>
-                    <h2 class="text-[11px] font-black text-slate-600 uppercase tracking-widest">週間天気予報</h2>
-                </div>
+            <div class="flex items-center gap-2 mb-3 relative z-10">
+                <i data-lucide="calendar" class="w-3.5 h-3.5 text-sky-600"></i>
+                <h2 class="text-[10px] font-black text-slate-600 uppercase tracking-widest">週間天気予報</h2>
             </div>
             
-            <div id="weekly-list" class="flex overflow-x-auto gap-4 pb-2 scrollbar-hide relative z-10"></div>
+            <div id="weekly-list" class="flex overflow-x-auto gap-3 pb-2 scrollbar-hide relative z-10 justify-start"></div>
 
             <div class="relative z-10 mt-1 px-1">
                 <a href="https://weather.yahoo.co.jp/weather/zoomradar/" target="_blank" class="inline-flex items-center gap-1.5 text-slate-500 hover:text-sky-600 transition-colors py-1">
-                    <i data-lucide="satellite" class="w-3.5 h-3.5"></i>
-                    <span class="text-[10px] font-bold tracking-tight">雨雲レーダー (Yahoo!)</span>
-                    <i data-lucide="external-link" class="w-3 h-3 opacity-40"></i>
+                    <i data-lucide="satellite" class="w-3 h-3"></i>
+                    <span class="text-[9px] font-bold tracking-tight">雨雲レーダー</span>
                 </a>
             </div>
         </section>
 
-        <!-- 統計パネル -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <!-- 予想気温 -->
-            <div class="glass-card p-5 border-b-4 border-b-rose-400">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">予想気温 (最高/最低)</span>
-                    <i data-lucide="thermometer-sun" class="w-4 h-4 text-rose-400"></i>
+        <!-- 統計パネル (コンパクト & 左寄せ) -->
+        <div class="grid grid-cols-2 lg:flex lg:flex-wrap gap-3 justify-start relative z-10">
+            <div class="glass-card p-4 min-w-[140px] border-b-2 border-b-rose-400">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-[9px] font-black text-slate-400 uppercase">気温</span>
+                    <i data-lucide="thermometer" class="w-3 h-3 text-rose-400"></i>
                 </div>
-                <div class="flex flex-col">
-                    <div class="flex items-baseline gap-1">
-                        <span id="stat-temp-max" class="stat-value text-3xl font-black text-rose-600">-</span>
-                        <span class="text-[10px] font-bold text-rose-400">最高</span>
-                    </div>
-                    <div class="flex items-baseline gap-1 -mt-1">
-                        <span id="stat-temp-min" class="stat-value text-xl font-black text-sky-600">-</span>
-                        <span class="text-[10px] font-bold text-sky-400">最低</span>
-                    </div>
+                <div class="flex items-baseline gap-1.5">
+                    <span id="stat-temp-max" class="text-2xl font-black text-rose-600">-</span>
+                    <span class="text-slate-300">/</span>
+                    <span id="stat-temp-min" class="text-lg font-black text-sky-600">-</span>
                 </div>
             </div>
 
-            <!-- 風速 -->
-            <div class="glass-card p-5 border-b-4 border-b-sky-500">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
-                        <span class="live-indicator"></span> 風速 (予報)
+            <div class="glass-card p-4 min-w-[140px] border-b-2 border-b-sky-500">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-[9px] font-black text-slate-400 uppercase flex items-center gap-1.5">
+                        <span class="live-indicator"></span> 風速
                     </span>
-                    <i data-lucide="wind" class="w-4 h-4 text-slate-400"></i>
+                    <i data-lucide="wind" class="w-3 h-3 text-slate-400"></i>
                 </div>
                 <div class="flex items-baseline gap-1">
-                    <span id="stat-wind" class="stat-value text-4xl font-black text-slate-900">-</span>
-                    <span class="text-xs font-bold text-slate-500">m/s</span>
+                    <span id="stat-wind" class="text-3xl font-black text-slate-900">-</span>
+                    <span class="text-[10px] font-bold text-slate-500">m/s</span>
                 </div>
             </div>
 
-            <!-- 波高 -->
-            <div class="glass-card p-5 border-b-4 border-b-indigo-400">
-                <div class="flex items-center justify-between mb-3">
-                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">波高 (現在)</span>
-                    <i data-lucide="waves" class="w-4 h-4 text-indigo-400"></i>
+            <div class="glass-card p-4 min-w-[140px] border-b-2 border-b-indigo-400">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-[9px] font-black text-slate-400 uppercase">波高</span>
+                    <i data-lucide="waves" class="w-3 h-3 text-indigo-400"></i>
                 </div>
                 <div class="flex items-baseline gap-1">
-                    <span id="stat-wave" class="stat-value text-4xl font-black text-indigo-600">-</span>
-                    <span class="text-xs font-bold text-indigo-400">m</span>
+                    <span id="stat-wave" class="text-3xl font-black text-indigo-600">-</span>
+                    <span class="text-[10px] font-bold text-indigo-400">m</span>
                 </div>
             </div>
 
-            <!-- マズメ -->
-            <div class="glass-card p-5 border-b-4 border-b-amber-400">
-                <div class="flex items-center justify-between mb-2">
-                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">マズメ</span>
-                    <i data-lucide="sun" class="w-4 h-4 text-amber-600"></i>
+            <div class="glass-card p-4 min-w-[140px] border-b-2 border-b-amber-400">
+                <div class="flex items-center justify-between mb-1">
+                    <span class="text-[9px] font-black text-slate-400 uppercase">マズメ</span>
+                    <i data-lucide="sun" class="w-3 h-3 text-amber-600"></i>
                 </div>
-                <div id="stat-sun" class="text-[11px] font-bold text-slate-700 mt-1"></div>
+                <div id="stat-sun" class="text-[10px] font-bold text-slate-700 leading-tight"></div>
             </div>
         </div>
 
-        <!-- 詳細テーブル -->
-        <div class="glass-card overflow-hidden">
-            <div class="px-6 py-5 border-b border-slate-200 flex justify-between items-center bg-white/60">
-                <h2 class="text-xs font-black text-slate-900 uppercase tracking-tighter flex items-center gap-2">
-                    <i data-lucide="clock" class="w-4 h-4 text-sky-600"></i>
-                    時間別詳細予報 (3:00 - 18:00)
-                </h2>
-                <div id="table-date" class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-[10px] font-black tracking-widest">日付</div>
-            </div>
-            <div class="overflow-x-auto">
-                <table class="w-full text-left min-w-[900px]">
-                    <thead>
-                        <tr class="text-[9px] uppercase font-black text-slate-500 bg-slate-100/50">
-                            <th class="py-4 pl-6">時刻</th>
-                            <th class="text-center">天気</th>
-                            <th class="text-center">気温</th>
-                            <th class="text-center">降水</th>
-                            <th>風予報 (風向き)</th>
-                            <th>風実測</th>
-                            <th>波高</th>
-                            <th>水温</th>
-                            <th class="text-right pr-6">潮位目安</th>
-                        </tr>
-                    </thead>
-                    <tbody id="forecast-table-body" class="text-sm font-bold text-slate-800"></tbody>
-                </table>
+        <!-- 詳細テーブル (左寄せ & コンパクト) -->
+        <div class="flex justify-start relative z-10">
+            <div class="glass-card overflow-hidden inline-block shadow-sm">
+                <div class="px-3 py-2 border-b border-slate-200 flex justify-between items-center bg-white/60">
+                    <h2 class="text-[9px] font-black text-slate-900 uppercase tracking-tighter flex items-center gap-2">
+                        <i data-lucide="clock" class="w-3 h-3 text-sky-600"></i>
+                        詳細予報 (3-18時)
+                    </h2>
+                    <div id="table-date" class="ml-6 px-2 py-0.5 bg-sky-100 text-sky-700 rounded text-[7px] font-black tracking-widest">日付</div>
+                </div>
+                <div class="overflow-x-auto scrollbar-hide">
+                    <table class="text-left min-w-[550px] table-fixed">
+                        <thead>
+                            <tr class="text-[7px] uppercase font-black text-slate-400 bg-slate-50/50">
+                                <th class="py-1.5 pl-3 col-time">時刻</th>
+                                <th class="text-center col-weather">天気</th>
+                                <th class="text-center col-temp">気温</th>
+                                <th class="text-center col-rain">雨</th>
+                                <th class="px-1 col-wind">風予報</th>
+                                <th class="px-1 col-wave">波</th>
+                                <th class="px-1 col-actual">実測</th>
+                                <th class="px-1 col-water">水温</th>
+                                <th class="text-right pr-3 col-tide">潮位</th>
+                            </tr>
+                        </thead>
+                        <tbody id="forecast-table-body" class="text-[11px] font-bold text-slate-700"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </main>
 
     <nav class="fixed bottom-6 left-6 right-6 bg-white/95 backdrop-blur-xl px-8 py-4 rounded-[2rem] flex items-center justify-between shadow-2xl z-[100] max-w-xs mx-auto border border-sky-100">
         <button onclick="updateData()" class="text-slate-400 hover:text-sky-600 transition-colors">
-            <i data-lucide="rotate-cw" class="w-6 h-6"></i>
+            <i data-lucide="rotate-cw" class="w-5 h-5"></i>
         </button>
         <button onclick="window.open('https://weather.yahoo.co.jp/weather/zoomradar/')" class="text-slate-400 hover:text-sky-600">
-            <i data-lucide="map" class="w-6 h-6"></i>
+            <i data-lucide="map" class="w-5 h-5"></i>
         </button>
         <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="text-slate-400 hover:text-sky-600">
-            <i data-lucide="chevron-up" class="w-6 h-6"></i>
+            <i data-lucide="chevron-up" class="w-5 h-5"></i>
         </button>
     </nav>
 
@@ -318,12 +321,10 @@
             const baseDate = new Date(2000, 0, 6);
             const diffDays = Math.floor((date - baseDate) / (24 * 60 * 60 * 1000));
             const age = diffDays % 29.53;
-            
             if (age < 2 || age >= 28 || (age >= 13 && age < 17)) return { label: '大潮', color: 'bg-sky-600 text-white' };
             if ((age >= 2 && age < 6) || (age >= 17 && age < 21) || (age >= 25 && age < 28)) return { label: '中潮', color: 'bg-sky-200 text-sky-800' };
             if ((age >= 6 && age < 9) || (age >= 21 && age < 24)) return { label: '小潮', color: 'bg-slate-300 text-slate-700' };
-            if (age >= 9 && age < 11 || age >= 24 && age < 25) return { label: '長潮', color: 'bg-amber-100 text-amber-800' };
-            return { label: '若潮', color: 'bg-emerald-100 text-emerald-800' };
+            return { label: '長潮', color: 'bg-amber-100 text-amber-800' };
         }
 
         async function updateData() {
@@ -349,21 +350,19 @@
 
         function render() {
             if (!cachedWeatherData || !cachedMarineData) return;
-            
             const w = cachedWeatherData;
             const m = cachedMarineData;
             const startIdx = 24 + (selectedDayIndex * 24);
             const nowHour = new Date().getHours();
 
-            // 統計パネルの更新
             document.getElementById('stat-temp-max').innerText = w.daily.temperature_2m_max[selectedDayIndex+1].toFixed(1);
             document.getElementById('stat-temp-min').innerText = w.daily.temperature_2m_min[selectedDayIndex+1].toFixed(1);
             document.getElementById('stat-wind').innerText = (w.hourly.windspeed_10m[startIdx + (selectedDayIndex === 0 ? nowHour : 12)]).toFixed(1);
             document.getElementById('stat-wave').innerText = (m.hourly.wave_height[startIdx + (selectedDayIndex === 0 ? nowHour : 12)] || 0.5).toFixed(1);
             
             document.getElementById('stat-sun').innerHTML = `
-                <div class="flex justify-between gap-4"><span>日の出</span><span class="text-amber-700 font-black">${w.daily.sunrise[selectedDayIndex+1].split('T')[1]}</span></div>
-                <div class="flex justify-between gap-4"><span>日の入</span><span class="text-rose-600 font-black">${w.daily.sunset[selectedDayIndex+1].split('T')[1]}</span></div>`;
+                <div class="flex justify-between gap-2"><span>出:</span><span class="text-amber-700 font-black">${w.daily.sunrise[selectedDayIndex+1].split('T')[1]}</span></div>
+                <div class="flex justify-between gap-2"><span>入:</span><span class="text-rose-600 font-black">${w.daily.sunset[selectedDayIndex+1].split('T')[1]}</span></div>`;
             document.getElementById('table-date').innerText = w.daily.time[selectedDayIndex+1].replace(/-/g, '.');
 
             const body = document.getElementById('forecast-table-body');
@@ -375,32 +374,31 @@
                 const isCurrentHourRow = (selectedDayIndex === 0 && i === nowHour);
 
                 const row = document.createElement('tr');
-                row.className = isPrime ? 'golden-row' : '';
+                row.className = `border-b border-slate-50 ${isPrime ? 'golden-row' : ''}`;
                 row.innerHTML = `
-                    <td class="py-4 pl-6 text-slate-500 font-medium">
+                    <td class="py-2 pl-3 text-slate-400 text-[9px]">
                         ${i}:00
-                        ${isCurrentHourRow ? '<span class="ml-1 text-[8px] bg-emerald-500 text-white px-1 py-0.5 rounded-sm">現在</span>' : ''}
+                        ${isCurrentHourRow ? '<div class="text-[5px] leading-none bg-emerald-500 text-white px-0.5 rounded-sm inline-block">LIVE</div>' : ''}
                     </td>
-                    <td class="text-center text-lg">${getEmoji(w.hourly.weathercode[idx])}</td>
-                    <td class="text-center text-rose-600 font-black">${w.hourly.temperature_2m[idx].toFixed(1)}<span class="text-[9px] ml-0.5">℃</span></td>
-                    <td class="text-center text-sky-500 font-bold">${w.hourly.precipitation[idx].toFixed(1)}</td>
-                    <td>
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="navigation" class="w-3 h-3 text-sky-600" style="transform: rotate(${w.hourly.winddirection_10m[idx]}deg)"></i>
-                            <span class="text-slate-900 font-black">${w.hourly.windspeed_10m[idx].toFixed(1)}</span>
-                            <span class="text-[10px] text-slate-500 font-bold">${getWindDirectionJP(w.hourly.winddirection_10m[idx])}</span>
+                    <td class="text-center text-xs">${getEmoji(w.hourly.weathercode[idx])}</td>
+                    <td class="text-center text-rose-600 font-black">${w.hourly.temperature_2m[idx].toFixed(0)}<span class="text-[6px] ml-0.5 opacity-50">°</span></td>
+                    <td class="text-center text-sky-500 font-bold">${w.hourly.precipitation[idx].toFixed(0)}</td>
+                    <td class="px-1">
+                        <div class="flex items-center gap-0.5">
+                            <i data-lucide="navigation" class="w-2 h-2 text-sky-600" style="transform: rotate(${w.hourly.winddirection_10m[idx]}deg)"></i>
+                            <span class="text-slate-900">${w.hourly.windspeed_10m[idx].toFixed(1)}</span>
+                            <span class="text-[6px] text-slate-300 font-normal truncate">${getWindDirectionJP(w.hourly.winddirection_10m[idx]).substring(0,1)}</span>
                         </div>
                     </td>
-                    <td>
+                    <td class="px-1 text-indigo-700 font-black">${(m.hourly.wave_height[idx]||0.5).toFixed(1)}<span class="text-[6px] ml-0.5 opacity-40">m</span></td>
+                    <td class="px-1">
                         ${isCurrentHourRow ? `
-                        <div class="flex items-center gap-1.5">
-                            <span class="text-emerald-600 font-black">${cachedActualWind.toFixed(1)}</span>
-                            <span class="text-[8px] bg-emerald-50 text-emerald-600 border border-emerald-100 px-1 py-0.5 rounded">実測</span>
-                        </div>` : '<span class="text-slate-300">-</span>'}
+                        <div class="flex items-center">
+                            <span class="text-emerald-600">${cachedActualWind.toFixed(1)}</span>
+                        </div>` : '<span class="text-slate-200">-</span>'}
                     </td>
-                    <td class="text-indigo-700 font-bold">${(m.hourly.wave_height[idx]||0.5).toFixed(1)}m</td>
-                    <td class="text-emerald-700 font-bold">${(m.hourly.sea_surface_temperature[idx]||17).toFixed(1)}</td>
-                    <td class="text-right pr-6 text-slate-400 font-mono">${Math.round(50 + 40 * Math.sin((i - 4) * 0.5))}</td>`;
+                    <td class="px-1 text-emerald-700 font-bold text-[9px]">${(m.hourly.sea_surface_temperature[idx]||17).toFixed(1)}</td>
+                    <td class="text-right pr-3 text-slate-300 font-mono text-[8px]">${Math.round(50 + 40 * Math.sin((i - 4) * 0.5))}</td>`;
                 body.appendChild(row);
             }
 
@@ -409,46 +407,25 @@
             for (let i = 1; i <= 7; i++) {
                 const date = new Date(w.daily.time[i]);
                 const dayNum = date.getDay();
-                const dayOfMonth = date.getDate();
                 const isSelected = i-1 === selectedDayIndex;
                 const isToday = i === 1;
                 const tide = getTideInfo(date);
                 
-                // 平均気温の計算
-                const dayStartIdx = 24 + ((i-1) * 24);
-                let tempSum = 0;
-                let waveSum = 0;
-                for(let h = 0; h < 24; h++) {
-                    tempSum += w.hourly.temperature_2m[dayStartIdx + h];
-                    waveSum += (m.hourly.wave_height[dayStartIdx + h] || 0.5);
-                }
-                const avgTemp = (tempSum / 24).toFixed(1);
-                const avgWave = (waveSum / 24).toFixed(1);
-
                 const card = document.createElement('div');
-                card.className = `flex-shrink-0 w-32 p-5 glass-card flex flex-col items-center gap-2 cursor-pointer ${isSelected ? 'weekly-card-active' : 'opacity-85 hover:opacity-100 hover:bg-white'}`;
-                
+                card.className = `flex-shrink-0 w-24 p-3 glass-card flex flex-col items-center gap-1 cursor-pointer ${isSelected ? 'weekly-card-active' : 'opacity-85 hover:opacity-100'}`;
                 card.onclick = () => { selectedDayIndex = i - 1; render(); };
 
-                const labelText = isToday ? '今日' : `${weekDaysJP[dayNum]}曜日`;
-
-                let colorClass = isToday ? 'text-sky-600' : 'text-slate-500';
-                if (!isToday && dayNum === 0) colorClass = 'text-rose-500';
-                if (!isToday && dayNum === 6) colorClass = 'text-sky-500';
-                
-                if (isSelected) {
-                    if (isToday) colorClass = 'text-sky-600 font-black';
-                    else colorClass = (dayNum === 0) ? 'text-rose-600' : (dayNum === 6 ? 'text-sky-700' : 'text-sky-700');
-                }
+                const labelText = isToday ? '今日' : `${weekDaysJP[dayNum]}`;
+                let colorClass = isToday ? 'text-sky-600' : (dayNum === 0 ? 'text-rose-500' : (dayNum === 6 ? 'text-sky-500' : 'text-slate-500'));
 
                 card.innerHTML = `
-                    <div class="text-[10px] font-black uppercase ${colorClass}">${labelText}</div>
-                    <div class="text-[14px] font-black text-slate-900 -mt-1">${dayOfMonth}日</div>
-                    <div class="tide-badge ${tide.color} scale-90">${tide.label}</div>
-                    <div class="text-3xl my-0.5">${getEmoji(w.daily.weathercode[i])}</div>
+                    <div class="text-[8px] font-black uppercase ${colorClass}">${labelText}</div>
+                    <div class="text-[12px] font-black text-slate-900 -mt-1">${date.getDate()}日</div>
+                    <div class="tide-badge ${tide.color} scale-90 -my-0.5">${tide.label}</div>
+                    <div class="text-xl my-0.5">${getEmoji(w.daily.weathercode[i])}</div>
                     <div class="flex flex-col items-center -space-y-1">
-                        <div class="text-[11px] font-black text-rose-600">${avgTemp}<span class="text-[8px] ml-0.5">℃</span></div>
-                        <div class="text-[10px] font-bold text-indigo-500">${avgWave}m</div>
+                        <div class="text-[10px] font-black text-rose-600">${w.daily.temperature_2m_max[i].toFixed(0)}<span class="text-[7px] ml-0.5">℃</span></div>
+                        <div class="text-[9px] font-bold text-indigo-500">${m.daily.wave_height_max[i].toFixed(1)}m</div>
                     </div>`;
                 list.appendChild(card);
             }
