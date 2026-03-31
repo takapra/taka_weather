@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>SeaConditions Pro - Weather Edition</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=Noto+Sans+JP:wght@400;700;900&display=swap');
+        
+        :root {
+            --primary: #0284c7;
+            --iso-blue: #0ea5e9;
+        }
+
+        body { 
+            font-family: 'Plus Jakarta Sans', 'Noto Sans JP', sans-serif; 
+            background: #e2e8f0; 
+            color: #0f172a; 
+            min-height: 100vh;
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .iso-background {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            background: linear-gradient(180deg, #bae6fd 0%, #cbd5e1 100%);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.1);
+            color: #1e293b;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .golden-row { 
+            background: linear-gradient(90deg, rgba(251, 191, 36, 0.15) 0%, rgba(251, 191, 36, 0.05) 100%) !important;
+            border-left: 5px solid #fbbf24 !important;
+        }
+
+        .live-indicator {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px #10b981;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.3); opacity: 0.5; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        
+        #loading-overlay {
+            position: fixed;
+            inset: 0;
+            background: #ffffff;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            transition: opacity 0.5s ease;
+        }
+
+        .hero-visual-container {
+            position: absolute;
+            right: -60px;
+            top: -40px;
+            width: 650px;
+            height: 550px;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .fish-mask {
+            mask-image: radial-gradient(circle at 55% 50%, black 25%, transparent 75%);
+            -webkit-mask-image: radial-gradient(circle at 55% 50%, black 25%, transparent 75%);
+            opacity: 0.6;
+        }
+
+        .weekly-card-active {
+            background: white !important;
+            border-color: #0ea5e9 !important;
+            box-shadow: 0 15px 35px -10px rgba(14, 165, 233, 0.4);
+            transform: translateY(-4px) scale(1.02);
+            z-index: 10;
+        }
+
+        .tide-badge {
+            font-size: 9px;
+            font-weight: 900;
+            padding: 2px 6px;
+            border-radius: 6px;
+            letter-spacing: 0.05em;
+        }
+    </style>
+</head>
+<body class="pb-32">
+    <div class="iso-background">
+        <svg width="100%" height="100%" preserveAspectRatio="none" viewBox="0 0 1000 1000" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="rockGradDay" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#94a3b8" />
+                    <stop offset="100%" style="stop-color:#64748b" />
+                </linearGradient>
+            </defs>
+            <path d="M0 450 Q 250 420 500 450 T 1000 450 L 1000 1000 L 0 1000 Z" fill="#e2e8f0" opacity="0.4" />
+            <path d="M0 1000 L 0 750 L 200 620 L 400 700 L 600 550 L 800 680 L 1000 600 L 1000 1000 Z" fill="url(#rockGradDay)" opacity="0.2" />
+        </svg>
+    </div>
+
+    <div id="loading-overlay">
+        <div class="w-12 h-12 border-4 border-sky-100 border-t-sky-500 rounded-full animate-spin mb-4"></div>
+        <div class="text-sky-600 font-black tracking-widest text-[10px]">データ取得中...</div>
+    </div>
+
+    <header class="sticky top-0 z-50 bg-white/70 backdrop-blur-xl border-b border-sky-200 px-4 py-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between relative z-10">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-sky-600 rounded-2xl flex items-center justify-center shadow-lg shadow-sky-200">
+                    <i data-lucide="cloud-sun" class="w-6 h-6 text-white"></i>
+                </div>
+                <h1 class="text-xl font-black text-slate-900 tracking-tighter">Sea<span class="text-sky-500">Weather</span></h1>
+            </div>
+            
+            <select id="area-select" onchange="updateData()" class="bg-white text-slate-700 text-[12px] font-bold rounded-xl px-4 py-2.5 border border-sky-100 outline-none appearance-none cursor-pointer shadow-sm">
+                <option value="shiosezaki">秋田 潮瀬崎</option>
+                <option value="kamo">秋田 加茂地区</option>
+                <option value="nyudozaki">秋田 入道崎</option>
+                <option value="akita">秋田港</option>
+            </select>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto p-4 space-y-6">
+        
+        <!-- 週間予報セクション -->
+        <section class="relative">
+            <!-- イラストメジナ (SVG) - ビジュアルとして維持 -->
+            <div class="hero-visual-container fish-mask">
+                <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
+                    <defs>
+                        <radialGradient id="fishGrad" cx="40%" cy="40%" r="70%">
+                            <stop offset="0%" style="stop-color:#64748b" />
+                            <stop offset="60%" style="stop-color:#334155" />
+                            <stop offset="100%" style="stop-color:#0f172a" />
+                        </radialGradient>
+                        <radialGradient id="eyeBlueGrad" cx="50%" cy="50%" r="50%">
+                            <stop offset="0%" style="stop-color:#0ea5e9" />
+                            <stop offset="70%" style="stop-color:#0369a1" />
+                            <stop offset="100%" style="stop-color:#000" />
+                        </radialGradient>
+                    </defs>
+                    <path d="M40,120 C40,40 260,-20 400,100 L400,350 C260,450 40,400 40,320 Z" fill="url(#fishGrad)" />
+                    <g transform="translate(150, 180)">
+                        <circle r="42" fill="rgba(255,255,255,0.2)" />
+                        <circle r="34" fill="url(#eyeBlueGrad)" />
+                        <circle r="16" fill="#000" />
+                        <circle cx="-10" cy="-10" r="6" fill="#fff" opacity="0.8" />
+                    </g>
+                </svg>
+            </div>
+
+            <div class="flex items-center justify-between mb-4 px-1 relative z-10">
+                <div class="flex items-center gap-2">
+                    <i data-lucide="calendar" class="w-4 h-4 text-sky-600"></i>
+                    <h2 class="text-[11px] font-black text-slate-600 uppercase tracking-widest">週間天気予報</h2>
+                </div>
+            </div>
+            
+            <div id="weekly-list" class="flex overflow-x-auto gap-4 pb-2 scrollbar-hide relative z-10"></div>
+
+            <div class="relative z-10 mt-1 px-1">
+                <a href="https://weather.yahoo.co.jp/weather/zoomradar/" target="_blank" class="inline-flex items-center gap-1.5 text-slate-500 hover:text-sky-600 transition-colors py-1">
+                    <i data-lucide="satellite" class="w-3.5 h-3.5"></i>
+                    <span class="text-[10px] font-bold tracking-tight">雨雲レーダー (Yahoo!)</span>
+                    <i data-lucide="external-link" class="w-3 h-3 opacity-40"></i>
+                </a>
+            </div>
+        </section>
+
+        <!-- 統計パネル -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- 予想気温 -->
+            <div class="glass-card p-5 border-b-4 border-b-rose-400">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">予想気温 (最高/最低)</span>
+                    <i data-lucide="thermometer-sun" class="w-4 h-4 text-rose-400"></i>
+                </div>
+                <div class="flex flex-col">
+                    <div class="flex items-baseline gap-1">
+                        <span id="stat-temp-max" class="stat-value text-3xl font-black text-rose-600">-</span>
+                        <span class="text-[10px] font-bold text-rose-400">最高</span>
+                    </div>
+                    <div class="flex items-baseline gap-1 -mt-1">
+                        <span id="stat-temp-min" class="stat-value text-xl font-black text-sky-600">-</span>
+                        <span class="text-[10px] font-bold text-sky-400">最低</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 風速 -->
+            <div class="glass-card p-5 border-b-4 border-b-sky-500">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest flex items-center gap-2">
+                        <span class="live-indicator"></span> 風速 (予報)
+                    </span>
+                    <i data-lucide="wind" class="w-4 h-4 text-slate-400"></i>
+                </div>
+                <div class="flex items-baseline gap-1">
+                    <span id="stat-wind" class="stat-value text-4xl font-black text-slate-900">-</span>
+                    <span class="text-xs font-bold text-slate-500">m/s</span>
+                </div>
+            </div>
+
+            <!-- 波高 -->
+            <div class="glass-card p-5 border-b-4 border-b-indigo-400">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">波高 (現在)</span>
+                    <i data-lucide="waves" class="w-4 h-4 text-indigo-400"></i>
+                </div>
+                <div class="flex items-baseline gap-1">
+                    <span id="stat-wave" class="stat-value text-4xl font-black text-indigo-600">-</span>
+                    <span class="text-xs font-bold text-indigo-400">m</span>
+                </div>
+            </div>
+
+            <!-- マズメ -->
+            <div class="glass-card p-5 border-b-4 border-b-amber-400">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">マズメ</span>
+                    <i data-lucide="sun" class="w-4 h-4 text-amber-600"></i>
+                </div>
+                <div id="stat-sun" class="text-[11px] font-bold text-slate-700 mt-1"></div>
+            </div>
+        </div>
+
+        <!-- 詳細テーブル -->
+        <div class="glass-card overflow-hidden">
+            <div class="px-6 py-5 border-b border-slate-200 flex justify-between items-center bg-white/60">
+                <h2 class="text-xs font-black text-slate-900 uppercase tracking-tighter flex items-center gap-2">
+                    <i data-lucide="clock" class="w-4 h-4 text-sky-600"></i>
+                    時間別詳細予報 (3:00 - 18:00)
+                </h2>
+                <div id="table-date" class="px-3 py-1 bg-sky-100 text-sky-700 rounded-full text-[10px] font-black tracking-widest">日付</div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left min-w-[900px]">
+                    <thead>
+                        <tr class="text-[9px] uppercase font-black text-slate-500 bg-slate-100/50">
+                            <th class="py-4 pl-6">時刻</th>
+                            <th class="text-center">天気</th>
+                            <th class="text-center">気温</th>
+                            <th class="text-center">降水</th>
+                            <th>風予報 (風向き)</th>
+                            <th>風実測</th>
+                            <th>波高</th>
+                            <th>水温</th>
+                            <th class="text-right pr-6">潮位目安</th>
+                        </tr>
+                    </thead>
+                    <tbody id="forecast-table-body" class="text-sm font-bold text-slate-800"></tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+
+    <nav class="fixed bottom-6 left-6 right-6 bg-white/95 backdrop-blur-xl px-8 py-4 rounded-[2rem] flex items-center justify-between shadow-2xl z-[100] max-w-xs mx-auto border border-sky-100">
+        <button onclick="updateData()" class="text-slate-400 hover:text-sky-600 transition-colors">
+            <i data-lucide="rotate-cw" class="w-6 h-6"></i>
+        </button>
+        <button onclick="window.open('https://weather.yahoo.co.jp/weather/zoomradar/')" class="text-slate-400 hover:text-sky-600">
+            <i data-lucide="map" class="w-6 h-6"></i>
+        </button>
+        <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="text-slate-400 hover:text-sky-600">
+            <i data-lucide="chevron-up" class="w-6 h-6"></i>
+        </button>
+    </nav>
+
+    <script>
+        const LOCATIONS = {
+            shiosezaki: { lat: 39.85, lon: 139.75 },
+            kamo: { lat: 39.87, lon: 139.74 },
+            nyudozaki: { lat: 39.99, lon: 139.70 },
+            akita: { lat: 39.75, lon: 140.06 }
+        };
+
+        const weekDaysJP = ['日', '月', '火', '水', '木', '金', '土'];
+        let selectedDayIndex = 0;
+        let cachedWeatherData = null;
+        let cachedMarineData = null;
+        let cachedActualWind = null;
+
+        function getWindDirectionJP(degree) {
+            const directions = ['北', '北北東', '北東', '東北東', '東', '東南東', '南東', '南南東', '南', '南南西', '南西', '西南西', '西', '西北西', '北西', '北北西'];
+            const index = Math.floor(((degree + 11.25) % 360) / 22.5);
+            return directions[index];
+        }
+
+        function getTideInfo(date) {
+            const baseDate = new Date(2000, 0, 6);
+            const diffDays = Math.floor((date - baseDate) / (24 * 60 * 60 * 1000));
+            const age = diffDays % 29.53;
+            
+            if (age < 2 || age >= 28 || (age >= 13 && age < 17)) return { label: '大潮', color: 'bg-sky-600 text-white' };
+            if ((age >= 2 && age < 6) || (age >= 17 && age < 21) || (age >= 25 && age < 28)) return { label: '中潮', color: 'bg-sky-200 text-sky-800' };
+            if ((age >= 6 && age < 9) || (age >= 21 && age < 24)) return { label: '小潮', color: 'bg-slate-300 text-slate-700' };
+            if (age >= 9 && age < 11 || age >= 24 && age < 25) return { label: '長潮', color: 'bg-amber-100 text-amber-800' };
+            return { label: '若潮', color: 'bg-emerald-100 text-emerald-800' };
+        }
+
+        async function updateData() {
+            const loader = document.getElementById('loading-overlay');
+            loader.style.opacity = '1'; loader.style.display = 'flex';
+            const areaKey = document.getElementById('area-select').value;
+            const loc = LOCATIONS[areaKey];
+            try {
+                const [wRes, mRes, aRes] = await Promise.all([
+                    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=windspeed_10m,weathercode&hourly=weathercode,temperature_2m,windspeed_10m,winddirection_10m,precipitation&daily=weathercode,sunrise,sunset,temperature_2m_max,temperature_2m_min&windspeed_unit=ms&timezone=Asia%2FTokyo&past_days=1`),
+                    fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${loc.lat}&longitude=${loc.lon}&hourly=wave_height,sea_surface_temperature&daily=wave_height_max&timezone=Asia%2FTokyo&past_days=1`),
+                    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=windspeed_10m&windspeed_unit=ms&timezone=Asia%2FTokyo`)
+                ]);
+                cachedWeatherData = await wRes.json();
+                cachedMarineData = await mRes.json();
+                const actualData = await aRes.json();
+                cachedActualWind = actualData.current.windspeed_10m;
+
+                render();
+                setTimeout(() => { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 500); }, 300);
+            } catch (e) { console.error(e); }
+        }
+
+        function render() {
+            if (!cachedWeatherData || !cachedMarineData) return;
+            
+            const w = cachedWeatherData;
+            const m = cachedMarineData;
+            const startIdx = 24 + (selectedDayIndex * 24);
+            const nowHour = new Date().getHours();
+
+            // 統計パネルの更新
+            document.getElementById('stat-temp-max').innerText = w.daily.temperature_2m_max[selectedDayIndex+1].toFixed(1);
+            document.getElementById('stat-temp-min').innerText = w.daily.temperature_2m_min[selectedDayIndex+1].toFixed(1);
+            document.getElementById('stat-wind').innerText = (w.hourly.windspeed_10m[startIdx + (selectedDayIndex === 0 ? nowHour : 12)]).toFixed(1);
+            document.getElementById('stat-wave').innerText = (m.hourly.wave_height[startIdx + (selectedDayIndex === 0 ? nowHour : 12)] || 0.5).toFixed(1);
+            
+            document.getElementById('stat-sun').innerHTML = `
+                <div class="flex justify-between gap-4"><span>日の出</span><span class="text-amber-700 font-black">${w.daily.sunrise[selectedDayIndex+1].split('T')[1]}</span></div>
+                <div class="flex justify-between gap-4"><span>日の入</span><span class="text-rose-600 font-black">${w.daily.sunset[selectedDayIndex+1].split('T')[1]}</span></div>`;
+            document.getElementById('table-date').innerText = w.daily.time[selectedDayIndex+1].replace(/-/g, '.');
+
+            const body = document.getElementById('forecast-table-body');
+            body.innerHTML = '';
+            
+            for (let i = 3; i <= 18; i++) {
+                const idx = startIdx + i;
+                const isPrime = ((i >= 4 && i <= 8) || (i >= 15 && i <= 18));
+                const isCurrentHourRow = (selectedDayIndex === 0 && i === nowHour);
+
+                const row = document.createElement('tr');
+                row.className = isPrime ? 'golden-row' : '';
+                row.innerHTML = `
+                    <td class="py-4 pl-6 text-slate-500 font-medium">
+                        ${i}:00
+                        ${isCurrentHourRow ? '<span class="ml-1 text-[8px] bg-emerald-500 text-white px-1 py-0.5 rounded-sm">現在</span>' : ''}
+                    </td>
+                    <td class="text-center text-lg">${getEmoji(w.hourly.weathercode[idx])}</td>
+                    <td class="text-center text-rose-600 font-black">${w.hourly.temperature_2m[idx].toFixed(1)}<span class="text-[9px] ml-0.5">℃</span></td>
+                    <td class="text-center text-sky-500 font-bold">${w.hourly.precipitation[idx].toFixed(1)}</td>
+                    <td>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="navigation" class="w-3 h-3 text-sky-600" style="transform: rotate(${w.hourly.winddirection_10m[idx]}deg)"></i>
+                            <span class="text-slate-900 font-black">${w.hourly.windspeed_10m[idx].toFixed(1)}</span>
+                            <span class="text-[10px] text-slate-500 font-bold">${getWindDirectionJP(w.hourly.winddirection_10m[idx])}</span>
+                        </div>
+                    </td>
+                    <td>
+                        ${isCurrentHourRow ? `
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-emerald-600 font-black">${cachedActualWind.toFixed(1)}</span>
+                            <span class="text-[8px] bg-emerald-50 text-emerald-600 border border-emerald-100 px-1 py-0.5 rounded">実測</span>
+                        </div>` : '<span class="text-slate-300">-</span>'}
+                    </td>
+                    <td class="text-indigo-700 font-bold">${(m.hourly.wave_height[idx]||0.5).toFixed(1)}m</td>
+                    <td class="text-emerald-700 font-bold">${(m.hourly.sea_surface_temperature[idx]||17).toFixed(1)}</td>
+                    <td class="text-right pr-6 text-slate-400 font-mono">${Math.round(50 + 40 * Math.sin((i - 4) * 0.5))}</td>`;
+                body.appendChild(row);
+            }
+
+            const list = document.getElementById('weekly-list');
+            list.innerHTML = '';
+            for (let i = 1; i <= 7; i++) {
+                const date = new Date(w.daily.time[i]);
+                const dayNum = date.getDay();
+                const dayOfMonth = date.getDate();
+                const isSelected = i-1 === selectedDayIndex;
+                const isToday = i === 1;
+                const tide = getTideInfo(date);
+                
+                // 平均気温の計算
+                const dayStartIdx = 24 + ((i-1) * 24);
+                let tempSum = 0;
+                let waveSum = 0;
+                for(let h = 0; h < 24; h++) {
+                    tempSum += w.hourly.temperature_2m[dayStartIdx + h];
+                    waveSum += (m.hourly.wave_height[dayStartIdx + h] || 0.5);
+                }
+                const avgTemp = (tempSum / 24).toFixed(1);
+                const avgWave = (waveSum / 24).toFixed(1);
+
+                const card = document.createElement('div');
+                card.className = `flex-shrink-0 w-32 p-5 glass-card flex flex-col items-center gap-2 cursor-pointer ${isSelected ? 'weekly-card-active' : 'opacity-85 hover:opacity-100 hover:bg-white'}`;
+                
+                card.onclick = () => { selectedDayIndex = i - 1; render(); };
+
+                const labelText = isToday ? '今日' : `${weekDaysJP[dayNum]}曜日`;
+
+                let colorClass = isToday ? 'text-sky-600' : 'text-slate-500';
+                if (!isToday && dayNum === 0) colorClass = 'text-rose-500';
+                if (!isToday && dayNum === 6) colorClass = 'text-sky-500';
+                
+                if (isSelected) {
+                    if (isToday) colorClass = 'text-sky-600 font-black';
+                    else colorClass = (dayNum === 0) ? 'text-rose-600' : (dayNum === 6 ? 'text-sky-700' : 'text-sky-700');
+                }
+
+                card.innerHTML = `
+                    <div class="text-[10px] font-black uppercase ${colorClass}">${labelText}</div>
+                    <div class="text-[14px] font-black text-slate-900 -mt-1">${dayOfMonth}日</div>
+                    <div class="tide-badge ${tide.color} scale-90">${tide.label}</div>
+                    <div class="text-3xl my-0.5">${getEmoji(w.daily.weathercode[i])}</div>
+                    <div class="flex flex-col items-center -space-y-1">
+                        <div class="text-[11px] font-black text-rose-600">${avgTemp}<span class="text-[8px] ml-0.5">℃</span></div>
+                        <div class="text-[10px] font-bold text-indigo-500">${avgWave}m</div>
+                    </div>`;
+                list.appendChild(card);
+            }
+            lucide.createIcons();
+        }
+
+        function getEmoji(c) {
+            if (c <= 1) return '☀️'; if (c <= 3) return '☁️'; if (c <= 65) return '🌧️'; return '❄️';
+        }
+
+        window.onload = () => { updateData(); };
+    </script>
+</body>
+</html>
