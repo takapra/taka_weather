@@ -79,7 +79,6 @@
             transition: opacity 0.5s ease;
         }
 
-        /* メジナのイラストコンテナ */
         .hero-visual-container {
             position: absolute;
             right: -40px;
@@ -111,16 +110,15 @@
             border-radius: 4px;
         }
         
-        /* テーブルの列幅を極限までコンパクトに */
-        .col-time { width: 55px; }
-        .col-weather { width: 40px; }
-        .col-temp { width: 45px; }
-        .col-rain { width: 40px; }
-        .col-wind { width: 90px; }
-        .col-wave { width: 60px; }
-        .col-actual { width: 65px; }
-        .col-water { width: 55px; }
-        .col-tide { width: 55px; }
+        /* テーブルの列幅を極限まで最適化 */
+        .col-time { width: 50px; }
+        .col-weather { width: 35px; }
+        .col-temp { width: 40px; }
+        .col-rain { width: 35px; }
+        .col-wind { width: 95px; } /* 日本語表記のために少し広めに確保 */
+        .col-wave { width: 45px; }
+        .col-water { width: 45px; }
+        .col-tide { width: 40px; }
     </style>
 </head>
 <body class="pb-32">
@@ -161,10 +159,8 @@
     </header>
 
     <main class="p-4 space-y-6">
-        
-        <!-- 週間予報セクション (左寄せ + イラスト) -->
+        <!-- 週間予報セクション -->
         <section class="relative max-w-full">
-            <!-- メジナのイラスト -->
             <div class="hero-visual-container fish-mask">
                 <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
                     <defs>
@@ -179,9 +175,7 @@
                             <stop offset="100%" style="stop-color:#000" />
                         </radialGradient>
                     </defs>
-                    <!-- メジナの体 -->
                     <path d="M40,150 C40,70 260,10 400,130 L400,320 C260,420 40,370 40,300 Z" fill="url(#fishGrad)" />
-                    <!-- 目の輝き -->
                     <g transform="translate(140, 190)">
                         <circle r="38" fill="rgba(255,255,255,0.15)" />
                         <circle r="30" fill="url(#eyeBlueGrad)" />
@@ -206,7 +200,7 @@
             </div>
         </section>
 
-        <!-- 統計パネル (コンパクト & 左寄せ) -->
+        <!-- 統計パネル -->
         <div class="grid grid-cols-2 lg:flex lg:flex-wrap gap-3 justify-start relative z-10">
             <div class="glass-card p-4 min-w-[140px] border-b-2 border-b-rose-400">
                 <div class="flex items-center justify-between mb-1">
@@ -253,7 +247,7 @@
             </div>
         </div>
 
-        <!-- 詳細テーブル (左寄せ & コンパクト) -->
+        <!-- 詳細テーブル (実測削除 & 日本語風向き維持) -->
         <div class="flex justify-start relative z-10">
             <div class="glass-card overflow-hidden inline-block shadow-sm">
                 <div class="px-3 py-2 border-b border-slate-200 flex justify-between items-center bg-white/60">
@@ -261,19 +255,18 @@
                         <i data-lucide="clock" class="w-3 h-3 text-sky-600"></i>
                         詳細予報 (3-18時)
                     </h2>
-                    <div id="table-date" class="ml-6 px-2 py-0.5 bg-sky-100 text-sky-700 rounded text-[7px] font-black tracking-widest">日付</div>
+                    <div id="table-date" class="ml-4 px-2 py-0.5 bg-sky-100 text-sky-700 rounded text-[7px] font-black tracking-widest">日付</div>
                 </div>
                 <div class="overflow-x-auto scrollbar-hide">
-                    <table class="text-left min-w-[550px] table-fixed">
+                    <table class="text-left min-w-[400px] table-fixed">
                         <thead>
                             <tr class="text-[7px] uppercase font-black text-slate-400 bg-slate-50/50">
                                 <th class="py-1.5 pl-3 col-time">時刻</th>
                                 <th class="text-center col-weather">天気</th>
                                 <th class="text-center col-temp">気温</th>
                                 <th class="text-center col-rain">雨</th>
-                                <th class="px-1 col-wind">風予報</th>
+                                <th class="px-1 col-wind">風向・風速</th>
                                 <th class="px-1 col-wave">波</th>
-                                <th class="px-1 col-actual">実測</th>
                                 <th class="px-1 col-water">水温</th>
                                 <th class="text-right pr-3 col-tide">潮位</th>
                             </tr>
@@ -309,7 +302,6 @@
         let selectedDayIndex = 0;
         let cachedWeatherData = null;
         let cachedMarineData = null;
-        let cachedActualWind = null;
 
         function getWindDirectionJP(degree) {
             const directions = ['北', '北北東', '北東', '東北東', '東', '東南東', '南東', '南南東', '南', '南南西', '南西', '西南西', '西', '西北西', '北西', '北北西'];
@@ -333,15 +325,12 @@
             const areaKey = document.getElementById('area-select').value;
             const loc = LOCATIONS[areaKey];
             try {
-                const [wRes, mRes, aRes] = await Promise.all([
+                const [wRes, mRes] = await Promise.all([
                     fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=windspeed_10m,weathercode&hourly=weathercode,temperature_2m,windspeed_10m,winddirection_10m,precipitation&daily=weathercode,sunrise,sunset,temperature_2m_max,temperature_2m_min&windspeed_unit=ms&timezone=Asia%2FTokyo&past_days=1`),
-                    fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${loc.lat}&longitude=${loc.lon}&hourly=wave_height,sea_surface_temperature&daily=wave_height_max&timezone=Asia%2FTokyo&past_days=1`),
-                    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${loc.lat}&longitude=${loc.lon}&current=windspeed_10m&windspeed_unit=ms&timezone=Asia%2FTokyo`)
+                    fetch(`https://marine-api.open-meteo.com/v1/marine?latitude=${loc.lat}&longitude=${loc.lon}&hourly=wave_height,sea_surface_temperature&daily=wave_height_max&timezone=Asia%2FTokyo&past_days=1`)
                 ]);
                 cachedWeatherData = await wRes.json();
                 cachedMarineData = await mRes.json();
-                const actualData = await aRes.json();
-                cachedActualWind = actualData.current.windspeed_10m;
 
                 render();
                 setTimeout(() => { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 500); }, 300);
@@ -384,19 +373,13 @@
                     <td class="text-center text-rose-600 font-black">${w.hourly.temperature_2m[idx].toFixed(0)}<span class="text-[6px] ml-0.5 opacity-50">°</span></td>
                     <td class="text-center text-sky-500 font-bold">${w.hourly.precipitation[idx].toFixed(0)}</td>
                     <td class="px-1">
-                        <div class="flex items-center gap-0.5">
-                            <i data-lucide="navigation" class="w-2 h-2 text-sky-600" style="transform: rotate(${w.hourly.winddirection_10m[idx]}deg)"></i>
-                            <span class="text-slate-900">${w.hourly.windspeed_10m[idx].toFixed(1)}</span>
-                            <span class="text-[6px] text-slate-300 font-normal truncate">${getWindDirectionJP(w.hourly.winddirection_10m[idx]).substring(0,1)}</span>
+                        <div class="flex items-center gap-1">
+                            <i data-lucide="navigation" class="w-2.5 h-2.5 text-sky-600" style="transform: rotate(${w.hourly.winddirection_10m[idx]}deg)"></i>
+                            <span class="text-slate-900 font-black">${w.hourly.windspeed_10m[idx].toFixed(1)}</span>
+                            <span class="text-[8px] text-slate-500 font-bold">${getWindDirectionJP(w.hourly.winddirection_10m[idx])}</span>
                         </div>
                     </td>
                     <td class="px-1 text-indigo-700 font-black">${(m.hourly.wave_height[idx]||0.5).toFixed(1)}<span class="text-[6px] ml-0.5 opacity-40">m</span></td>
-                    <td class="px-1">
-                        ${isCurrentHourRow ? `
-                        <div class="flex items-center">
-                            <span class="text-emerald-600">${cachedActualWind.toFixed(1)}</span>
-                        </div>` : '<span class="text-slate-200">-</span>'}
-                    </td>
                     <td class="px-1 text-emerald-700 font-bold text-[9px]">${(m.hourly.sea_surface_temperature[idx]||17).toFixed(1)}</td>
                     <td class="text-right pr-3 text-slate-300 font-mono text-[8px]">${Math.round(50 + 40 * Math.sin((i - 4) * 0.5))}</td>`;
                 body.appendChild(row);
