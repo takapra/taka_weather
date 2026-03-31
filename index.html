@@ -110,15 +110,20 @@
             border-radius: 4px;
         }
         
-        /* テーブルの列幅を極限まで最適化 */
         .col-time { width: 50px; }
         .col-weather { width: 35px; }
         .col-temp { width: 40px; }
         .col-rain { width: 35px; }
-        .col-wind { width: 95px; } /* 日本語表記のために少し広めに確保 */
+        .col-wind { width: 95px; } 
         .col-wave { width: 45px; }
         .col-water { width: 45px; }
         .col-tide { width: 40px; }
+
+        /* 風向きアイコンの基本スタイル (北向き0度) */
+        .wind-arrow {
+            display: inline-block;
+            transition: transform 0.5s ease;
+        }
     </style>
 </head>
 <body class="pb-32">
@@ -159,7 +164,6 @@
     </header>
 
     <main class="p-4 space-y-6">
-        <!-- 週間予報セクション -->
         <section class="relative max-w-full">
             <div class="hero-visual-container fish-mask">
                 <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
@@ -247,7 +251,7 @@
             </div>
         </div>
 
-        <!-- 詳細テーブル (実測削除 & 日本語風向き維持) -->
+        <!-- 詳細テーブル -->
         <div class="flex justify-start relative z-10">
             <div class="glass-card overflow-hidden inline-block shadow-sm">
                 <div class="px-3 py-2 border-b border-slate-200 flex justify-between items-center bg-white/60">
@@ -362,6 +366,12 @@
                 const isPrime = ((i >= 4 && i <= 8) || (i >= 15 && i <= 18));
                 const isCurrentHourRow = (selectedDayIndex === 0 && i === nowHour);
 
+                // 風向きの補正ロジック
+                // Lucideのnavigationアイコンは右上(45度)を向いているため、真上に補正するために -45度 する
+                // 風向き degree は「吹いてくる方向」なので、矢印を「風が流れる方向」にしたい場合は +180 する
+                const windDegree = w.hourly.winddirection_10m[idx];
+                const iconRotation = windDegree - 45 + 180; 
+
                 const row = document.createElement('tr');
                 row.className = `border-b border-slate-50 ${isPrime ? 'golden-row' : ''}`;
                 row.innerHTML = `
@@ -374,9 +384,11 @@
                     <td class="text-center text-sky-500 font-bold">${w.hourly.precipitation[idx].toFixed(0)}</td>
                     <td class="px-1">
                         <div class="flex items-center gap-1">
-                            <i data-lucide="navigation" class="w-2.5 h-2.5 text-sky-600" style="transform: rotate(${w.hourly.winddirection_10m[idx]}deg)"></i>
+                            <span class="wind-arrow" style="transform: rotate(${iconRotation}deg)">
+                                <i data-lucide="navigation" class="w-2.5 h-2.5 text-sky-600"></i>
+                            </span>
                             <span class="text-slate-900 font-black">${w.hourly.windspeed_10m[idx].toFixed(1)}</span>
-                            <span class="text-[8px] text-slate-500 font-bold">${getWindDirectionJP(w.hourly.winddirection_10m[idx])}</span>
+                            <span class="text-[8px] text-slate-500 font-bold">${getWindDirectionJP(windDegree)}</span>
                         </div>
                     </td>
                     <td class="px-1 text-indigo-700 font-black">${(m.hourly.wave_height[idx]||0.5).toFixed(1)}<span class="text-[6px] ml-0.5 opacity-40">m</span></td>
