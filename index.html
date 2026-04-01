@@ -119,7 +119,7 @@
         .col-time { width: 50px; }
         .col-weather { width: 45px; }
         .col-temp { width: 45px; }
-        .col-rain { width: 50px; } 
+        .col-rain { width: 65px; } 
         .col-wind { width: 100px; } 
         .col-wave { width: 45px; }
         .col-water { width: 45px; }
@@ -281,16 +281,16 @@
                 <div class="overflow-x-auto scrollbar-hide">
                     <table class="text-left min-w-[420px] table-fixed">
                         <thead>
-                            <tr class="text-[7px] uppercase font-black text-slate-400 bg-slate-50/50">
-                                <th class="py-1.5 pl-3 col-time">時刻</th>
-                                <th class="text-center col-weather">天気</th>
-                                <th class="text-center col-temp">気温</th>
-                                <!-- Rain unit changed to lowercase (mm) -->
-                                <th class="text-center col-rain">雨(mm)</th>
-                                <th class="px-1 col-wind">風向・風速</th>
-                                <th class="px-1 col-wave">波</th>
-                                <th class="px-1 col-water">水温</th>
-                                <th class="text-right pr-3 col-tide">潮位</th>
+                            <tr class="text-[7px] font-black text-slate-400 bg-slate-50/50">
+                                <th class="py-1.5 pl-3 col-time uppercase">時刻</th>
+                                <th class="text-center col-weather uppercase">天気</th>
+                                <th class="text-center col-temp uppercase">気温</th>
+                                <!-- Fixed: Added 'normal-case' to prevent 'mm' from becoming 'MM' -->
+                                <th class="text-center col-rain normal-case">降水量(mm)</th>
+                                <th class="px-1 col-wind uppercase">風向・風速</th>
+                                <th class="px-1 col-wave uppercase">波</th>
+                                <th class="px-1 col-water uppercase">水温</th>
+                                <th class="text-right pr-3 col-tide uppercase">潮位</th>
                             </tr>
                         </thead>
                         <tbody id="forecast-table-body" class="text-[11px] font-bold text-slate-700"></tbody>
