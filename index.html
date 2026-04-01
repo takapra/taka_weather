@@ -44,9 +44,9 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* テーブル行のスタイリング改善 */
+        /* Table row styling improvement */
         .forecast-row:nth-child(even) {
-            background-color: rgba(241, 245, 249, 0.5); /* 薄いグレーブルー */
+            background-color: rgba(241, 245, 249, 0.5);
         }
 
         .golden-row { 
@@ -115,7 +115,7 @@
             border-radius: 4px;
         }
         
-        /* テーブルの列幅調整 */
+        /* Column width adjustments */
         .col-time { width: 50px; }
         .col-weather { width: 45px; }
         .col-temp { width: 45px; }
@@ -130,7 +130,6 @@
             transition: transform 0.5s ease;
         }
 
-        /* 天気マークを見やすくするための背景 */
         .weather-icon-wrapper {
             background: rgba(15, 23, 42, 0.05);
             width: 28px;
@@ -181,7 +180,7 @@
     </header>
 
     <main class="p-4 space-y-6">
-        <!-- 週間予報セクション -->
+        <!-- Weekly Forecast Section -->
         <section class="relative max-w-full">
             <div class="hero-visual-container fish-mask">
                 <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
@@ -222,7 +221,7 @@
             </div>
         </section>
 
-        <!-- 統計パネル -->
+        <!-- Stats Panel -->
         <div class="grid grid-cols-2 lg:flex lg:flex-wrap gap-3 justify-start relative z-10">
             <div class="glass-card p-4 min-w-[140px] border-b-2 border-b-rose-400">
                 <div class="flex items-center justify-between mb-1">
@@ -265,12 +264,11 @@
                     <span class="text-[9px] font-black text-slate-400 uppercase">マズメ</span>
                     <i data-lucide="sun" class="w-3 h-3 text-amber-600"></i>
                 </div>
-                <!-- 表記を「日の出」「日の入り」に変更 -->
                 <div id="stat-sun" class="text-[10px] font-bold text-slate-700 leading-tight space-y-0.5 pt-0.5"></div>
             </div>
         </div>
 
-        <!-- 詳細テーブル -->
+        <!-- Detail Table -->
         <div class="flex justify-start relative z-10">
             <div class="glass-card overflow-hidden inline-block shadow-sm">
                 <div class="px-3 py-2 border-b border-slate-200 flex justify-between items-center bg-white/60">
@@ -287,6 +285,7 @@
                                 <th class="py-1.5 pl-3 col-time">時刻</th>
                                 <th class="text-center col-weather">天気</th>
                                 <th class="text-center col-temp">気温</th>
+                                <!-- Rain unit changed to lowercase (mm) -->
                                 <th class="text-center col-rain">雨(mm)</th>
                                 <th class="px-1 col-wind">風向・風速</th>
                                 <th class="px-1 col-wave">波</th>
@@ -301,7 +300,7 @@
         </div>
     </main>
 
-    <!-- ナビゲーション -->
+    <!-- Navigation -->
     <nav class="fixed bottom-6 left-6 right-6 bg-white/95 backdrop-blur-xl px-8 py-4 rounded-[2rem] flex items-center justify-between shadow-2xl z-[100] max-w-xs mx-auto border border-sky-100">
         <button onclick="updateData()" class="text-slate-400 hover:text-sky-600 transition-colors">
             <i data-lucide="rotate-cw" class="w-5 h-5"></i>
@@ -373,7 +372,6 @@
             document.getElementById('stat-wind').innerText = (w.hourly.windspeed_10m[startIdx + (selectedDayIndex === 0 ? nowHour : 12)]).toFixed(1);
             document.getElementById('stat-wave').innerText = (m.hourly.wave_height[startIdx + (selectedDayIndex === 0 ? nowHour : 12)] || 0.5).toFixed(1);
             
-            // 表記を「日の出」「日の入り」に更新
             document.getElementById('stat-sun').innerHTML = `
                 <div class="flex items-center gap-1">
                     <span class="text-slate-400 font-bold text-[8px] min-w-[32px]">日の出</span>
