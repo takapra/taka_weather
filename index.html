@@ -44,7 +44,6 @@
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        /* Table row styling improvement */
         .forecast-row:nth-child(even) {
             background-color: rgba(241, 245, 249, 0.5);
         }
@@ -115,7 +114,6 @@
             border-radius: 4px;
         }
         
-        /* Column width adjustments */
         .col-time { width: 50px; }
         .col-weather { width: 45px; }
         .col-temp { width: 45px; }
@@ -180,7 +178,6 @@
     </header>
 
     <main class="p-4 space-y-6">
-        <!-- Weekly Forecast Section -->
         <section class="relative max-w-full">
             <div class="hero-visual-container fish-mask">
                 <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg">
@@ -190,19 +187,8 @@
                             <stop offset="60%" style="stop-color:#1e293b" />
                             <stop offset="100%" style="stop-color:#0f172a" />
                         </radialGradient>
-                        <radialGradient id="eyeBlueGrad" cx="50%" cy="50%" r="50%">
-                            <stop offset="0%" style="stop-color:#0ea5e9" />
-                            <stop offset="70%" style="stop-color:#0369a1" />
-                            <stop offset="100%" style="stop-color:#000" />
-                        </radialGradient>
                     </defs>
                     <path d="M40,150 C40,70 260,10 400,130 L400,320 C260,420 40,370 40,300 Z" fill="url(#fishGrad)" />
-                    <g transform="translate(140, 190)">
-                        <circle r="38" fill="rgba(255,255,255,0.15)" />
-                        <circle r="30" fill="url(#eyeBlueGrad)" />
-                        <circle r="14" fill="#000" />
-                        <circle cx="-8" cy="-8" r="5" fill="#fff" opacity="0.8" />
-                    </g>
                 </svg>
             </div>
 
@@ -221,7 +207,6 @@
             </div>
         </section>
 
-        <!-- Stats Panel -->
         <div class="grid grid-cols-2 lg:flex lg:flex-wrap gap-3 justify-start relative z-10">
             <div class="glass-card p-4 min-w-[140px] border-b-2 border-b-rose-400">
                 <div class="flex items-center justify-between mb-1">
@@ -268,7 +253,6 @@
             </div>
         </div>
 
-        <!-- Detail Table -->
         <div class="flex justify-start relative z-10">
             <div class="glass-card overflow-hidden inline-block shadow-sm">
                 <div class="px-3 py-2 border-b border-slate-200 flex justify-between items-center bg-white/60">
@@ -285,7 +269,6 @@
                                 <th class="py-1.5 pl-3 col-time uppercase">時刻</th>
                                 <th class="text-center col-weather uppercase">天気</th>
                                 <th class="text-center col-temp uppercase">気温</th>
-                                <!-- Fixed: Added 'normal-case' to prevent 'mm' from becoming 'MM' -->
                                 <th class="text-center col-rain normal-case">降水量(mm)</th>
                                 <th class="px-1 col-wind uppercase">風向・風速</th>
                                 <th class="px-1 col-wave uppercase">波</th>
@@ -300,7 +283,6 @@
         </div>
     </main>
 
-    <!-- Navigation -->
     <nav class="fixed bottom-6 left-6 right-6 bg-white/95 backdrop-blur-xl px-8 py-4 rounded-[2rem] flex items-center justify-between shadow-2xl z-[100] max-w-xs mx-auto border border-sky-100">
         <button onclick="updateData()" class="text-slate-400 hover:text-sky-600 transition-colors">
             <i data-lucide="rotate-cw" class="w-5 h-5"></i>
@@ -354,7 +336,6 @@
                 ]);
                 cachedWeatherData = await wRes.json();
                 cachedMarineData = await mRes.json();
-
                 render();
                 setTimeout(() => { loader.style.opacity = '0'; setTimeout(() => loader.style.display = 'none', 500); }, 300);
             } catch (e) { console.error(e); }
@@ -390,7 +371,6 @@
                 const idx = startIdx + i;
                 const isPrime = ((i >= 4 && i <= 8) || (i >= 15 && i <= 18));
                 const isCurrentHourRow = (selectedDayIndex === 0 && i === nowHour);
-
                 const windDegree = w.hourly.winddirection_10m[idx];
                 const iconRotation = windDegree - 45 + 180; 
                 const rainVal = w.hourly.precipitation[idx];
@@ -456,11 +436,16 @@
             lucide.createIcons();
         }
 
+        // Improved Weather Logic (WMO Codes)
         function getEmoji(c) {
-            if (c <= 1) return '☀️'; 
-            if (c <= 3) return '☁️'; 
-            if (c <= 65) return '🌧️'; 
-            return '❄️';
+            if (c === 0) return '☀️'; // Clear sky
+            if (c <= 2) return '🌤️'; // Mainly clear / Partly cloudy
+            if (c === 3) return '☁️'; // Overcast
+            if (c >= 45 && c <= 48) return '🌫️'; // Fog
+            if ((c >= 51 && c <= 67) || (c >= 80 && c <= 82)) return '🌧️'; // Rain / Drizzle / Showers
+            if ((c >= 71 && c <= 77) || (c >= 85 && c <= 86)) return '❄️'; // Snow / Snow grains / Snow showers
+            if (c >= 95 && c <= 99) return '⛈️'; // Thunderstorm
+            return '☁️';
         }
 
         window.onload = () => { updateData(); };
